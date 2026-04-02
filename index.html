@@ -144,13 +144,14 @@
 
       <div class="box">
         <label class="label" for="csvFile">CSVファイルを選択</label>
-        <input type="file" id="csvFile" accept=".csv,text/csv">
+        <input type="file" id="csvFile" accept=".csv,text/csv,.tsv,text/tab-separated-values">
       </div>
 
       <div class="box">
         <button id="submitBtn" type="button">生成する</button>
         <div class="note">
-          対応形式例：<code>商品名 / 商品単価 / 商品コード</code>
+          対応形式例：<code>商品名 / 商品単価 / 商品コード</code><br>
+          カンマ区切りとタブ区切りの両方に対応
         </div>
       </div>
 
@@ -159,7 +160,7 @@
   </div>
 
   <script>
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxQZs_pDCGUVoo5mAEv9kpesHmIDRuf0RIw2ypvszpIW1PPJH_YgDTopA-nFWdOmtRS/exec';
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxfbI4AmAbsR6XbFv7SOeE9BC_ax-83yznhTiYFLQnzfioq4qp-9vKZr10rOeqq6G_dAw/exec';
 
     const fileInput = document.getElementById('csvFile');
     const submitBtn = document.getElementById('submitBtn');
@@ -171,7 +172,7 @@
       resetResult();
 
       if (!fileInput.files || !fileInput.files.length) {
-        showError('CSVファイルを選択してください。');
+        showError('CSVまたはTSVファイルを選択してください。');
         return;
       }
 
@@ -190,7 +191,7 @@
           body: JSON.stringify({
             base64: base64,
             fileName: file.name,
-            mimeType: file.type || 'text/csv'
+            mimeType: file.type || 'text/plain'
           })
         });
 
