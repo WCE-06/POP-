@@ -89,17 +89,11 @@
       font-weight: 700;
       cursor: pointer;
       box-shadow: 0 6px 16px rgba(217, 79, 48, 0.22);
-      transition: transform 0.08s ease, opacity 0.2s ease;
-    }
-
-    button:hover {
-      transform: translateY(-1px);
     }
 
     button:disabled {
       opacity: 0.65;
       cursor: not-allowed;
-      transform: none;
     }
 
     .note {
@@ -138,12 +132,6 @@
       color: #1d5fbf;
       word-break: break-all;
     }
-
-    .footer {
-      margin-top: 14px;
-      font-size: 12px;
-      color: #7a705e;
-    }
   </style>
 </head>
 <body>
@@ -167,15 +155,11 @@
       </div>
 
       <div id="result" class="result"></div>
-
-      <div class="footer">
-        生成後、Google Sheets と Excel ダウンロードURLを表示します。
-      </div>
     </div>
   </div>
 
   <script>
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyPLiUiG6psz_BJjYOvnHDSmrfaA-GeL5KTUeXnlQ145taFK7mueyx8EH-U8F2Qta8dRA/exec';
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxQZs_pDCGUVoo5mAEv9kpesHmIDRuf0RIw2ypvszpIW1PPJH_YgDTopA-nFWdOmtRS/exec';
 
     const fileInput = document.getElementById('csvFile');
     const submitBtn = document.getElementById('submitBtn');
