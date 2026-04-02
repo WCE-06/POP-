@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 24px;
+        background: #f7f7f7;
+      }
+      .card {
+        max-width: 640px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      }
+      h1 {
+        margin-top: 0;
+        font-size: 22px;
+      }
+      .muted {
+        color: #666;
+        font-size: 14px;
+      }
+      .row {
+        margin: 16px 0;
+      }
+      input[type="file"] {
+        width: 100%;
+      }
+      button {
+        border: none;
+        background: #2f6fed;
+        color: white;
+        padding: 12px 18px;
+        border-radius: 10px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .result {
+        margin-top: 20px;
+        padding: 14px;
+        border-radius: 12px;
+        background: #f1f8e9;
+        display: none;
+        white-space: pre-wrap;
+      }
+      .error {
+        background: #ffebee;
+      }
+      a {
+        word-break: break-all;
+      }
+      code {
+        background: #f3f3f3;
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>CSV → 値札Excel生成</h1>
+      <p class="muted">
+        CSVをアップロードすると、入力シート・POP大・POP中・POP小 を含むファイルを生成します。
+      </p>
+
+      <div class="row">
+        <input type="file" id="csvFile" accept=".csv,text/csv">
+      </div>
+
+      <div class="row">
+        <button id="submitBtn" onclick="handleUpload()">生成する</button>
+      </div>
+
+      <div class="row muted">
+        推奨ヘッダー: <code>商品名, 値段, バーコード, JANコード, 商品用コメント, 希望小売価格, 商談価格, 当店通常価格</code>
+      </div>
+
+      <div id="result" class="result"></div>
+    </div>
+
+    <script>
+      async function handleUpload() {
+        const fileInput = document.getElementById('csvFile');
+        const result = document.getElementById('result');
+        const btn = document.getElementById('submitBtn');
+        result.style.display = 'none';
+        result.classList.remove('error');
+
+        if (!fileInput.files.length) {
+          showError('CSVファイルを選択してください。');
+          return;
+        }
+
+        const file = fileInput.files[0];
+        btn.disabled = true;
+        btn.textContent = '生成中...';
+
+        try {
+          const base64 = await fileToBase64(file);
+          google.script.run
+            .withSuccessHandler((res) => {
+              btn.disabled = false;
+              btn.textContent = '生成する';
+
+              if (!res.ok) {
+                showError(res.message || 'エラーが発生しました。');
+                return;
+              }
+
+              result.style.display = 'block';
+              result.innerHTML = `生成完了\n\n商品数: ${res.count}件\n\nGoogle Sheets:\n<a href="${res.sheetUrl}" target="_blank">${res.sheetUrl}</a>\n\nExcel(.xlsx)ダウンロード:\n<a href="${res.xlsxUrl}" target="_blank">${res.xlsxUrl}</a>`;
+            })
+            .withFailureHandler((err) => {
+              btn.disabled = false;
+              btn.textContent = '生成する';
+              showError(err.message || '通信エラーが発生しました。');
+            })
+            .uploadCsvAndBuildWorkbook(base64, file.name, file.type);
+        } catch (e) {
+          btn.disabled = false;
+          btn.textContent = '生成する';
+          showError(e.message || 'ファイルの読み込みに失敗しました。');
+        }
+
+        function showError(message) {
+          result.style.display = 'block';
+          result.classList.add('error');
+          result.textContent = message;
+        }
+      }
+
+      function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = reader.result;
+            resolve(dataUrl.split(',')[1]);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+    </script>
+  </body>
+</html>
