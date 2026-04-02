@@ -144,14 +144,14 @@
 
       <div class="box">
         <label class="label" for="csvFile">CSVファイルを選択</label>
-        <input type="file" id="csvFile" accept=".csv,text/csv,.tsv,text/tab-separated-values">
+        <input type="file" id="csvFile" accept=".csv,text/csv,.tsv,text/tab-separated-values,.txt,text/plain">
       </div>
 
       <div class="box">
         <button id="submitBtn" type="button">生成する</button>
         <div class="note">
-          対応形式例：<code>商品名 / 商品単価 / 商品コード</code><br>
-          カンマ区切りとタブ区切りの両方に対応
+          固定列モード対応。<br>
+          3列目=商品コード / 4列目=キャッチコピー / 5列目=商品名 / 6列目=商品単価
         </div>
       </div>
 
@@ -160,7 +160,7 @@
   </div>
 
   <script>
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxfbI4AmAbsR6XbFv7SOeE9BC_ax-83yznhTiYFLQnzfioq4qp-9vKZr10rOeqq6G_dAw/exec';
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyRO9wK_uSQOp1dM_7T5dW14lLQsQYGPdu8RZ5mpQfTLY1Dg79cjfTb2r-30IeI2yGk0w/exec';
 
     const fileInput = document.getElementById('csvFile');
     const submitBtn = document.getElementById('submitBtn');
