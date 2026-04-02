@@ -150,9 +150,9 @@
       <div class="box">
         <button id="submitBtn" type="button">生成する</button>
         <div class="note">
-          固定列モード対応。<br>
-          1行目は無視し、2行目以降を読み込みます。<br>
-          <code>3列目=商品コード / 4列目=キャッチコピー / 5列目=商品名 / 6列目=商品単価</code>
+          1行目は見出しとして無視し、2行目以降を読み込みます。<br>
+          <code>3列目=商品コード / 4列目=キャッチコピー / 5列目=商品名 / 6列目=商品単価</code><br>
+          税抜・税込を併記し、バーコードは1本のみ表示します。
         </div>
       </div>
 
@@ -161,7 +161,7 @@
   </div>
 
   <script>
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwq9FAy53YIbe4AFfZexgq4MvNVqS-FV3ZJNH0MIkhkHE67p8Jw1BJ0r1KGaH68qVG1gg/exec';
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyRmmeexsXPsE-rPtDTxQ6JxEp1z0DOwEvaNqFTIjtGgrfqy4sF-I40k4USUulipxxVsg/exec';
 
     const fileInput = document.getElementById('csvFile');
     const submitBtn = document.getElementById('submitBtn');
