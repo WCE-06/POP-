@@ -1,154 +1,269 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <base target="_top">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        padding: 24px;
-        background: #f7f7f7;
-      }
-      .card {
-        max-width: 640px;
-        margin: 0 auto;
-        background: #fff;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-      }
-      h1 {
-        margin-top: 0;
-        font-size: 22px;
-      }
-      .muted {
-        color: #666;
-        font-size: 14px;
-      }
-      .row {
-        margin: 16px 0;
-      }
-      input[type="file"] {
-        width: 100%;
-      }
-      button {
-        border: none;
-        background: #2f6fed;
-        color: white;
-        padding: 12px 18px;
-        border-radius: 10px;
-        font-size: 14px;
-        cursor: pointer;
-      }
-      button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-      .result {
-        margin-top: 20px;
-        padding: 14px;
-        border-radius: 12px;
-        background: #f1f8e9;
-        display: none;
-        white-space: pre-wrap;
-      }
-      .error {
-        background: #ffebee;
-      }
-      a {
-        word-break: break-all;
-      }
-      code {
-        background: #f3f3f3;
-        padding: 2px 6px;
-        border-radius: 6px;
-      }
-    </style>
-  </head>
-  <body>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV → 値札Excel生成</title>
+  <style>
+    :root {
+      --cream: #fff6de;
+      --cream-dark: #f7e7bc;
+      --line: #d9c79a;
+      --text: #3d3527;
+      --accent: #d94f30;
+      --card: #fffdf7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background: linear-gradient(180deg, #fff8ea 0%, #fffdf7 100%);
+      color: var(--text);
+      font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+    }
+
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card);
+      border: 2px solid var(--line);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(80, 60, 20, 0.08);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      line-height: 1.3;
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .lead {
+      margin: 0 0 18px;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #5d5443;
+    }
+
+    .box {
+      background: var(--cream);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    .label {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--text);
+    }
+
+    button {
+      appearance: none;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 999px;
+      padding: 14px 22px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(217, 79, 48, 0.22);
+      transition: transform 0.08s ease, opacity 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .note {
+      margin-top: 14px;
+      font-size: 12px;
+      line-height: 1.8;
+      color: #6a614f;
+    }
+
+    .note code {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 2px 6px;
+      word-break: break-all;
+    }
+
+    .result {
+      display: none;
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #fffdf3;
+      white-space: pre-wrap;
+      line-height: 1.8;
+    }
+
+    .result.error {
+      background: #fff1ef;
+      border-color: #efb7ac;
+      color: #8a2d1f;
+    }
+
+    a {
+      color: #1d5fbf;
+      word-break: break-all;
+    }
+
+    .footer {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #7a705e;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
     <div class="card">
       <h1>CSV → 値札Excel生成</h1>
-      <p class="muted">
-        CSVをアップロードすると、入力シート・POP大・POP中・POP小 を含むファイルを生成します。
+      <p class="lead">
+        CSVをアップロードすると、入力シート・POP大・POP中・POP小 を含むExcel用データを生成します。
       </p>
 
-      <div class="row">
+      <div class="box">
+        <label class="label" for="csvFile">CSVファイルを選択</label>
         <input type="file" id="csvFile" accept=".csv,text/csv">
       </div>
 
-      <div class="row">
-        <button id="submitBtn" onclick="handleUpload()">生成する</button>
-      </div>
-
-      <div class="row muted">
-        推奨ヘッダー: <code>商品名, 値段, バーコード, JANコード, 商品用コメント, 希望小売価格, 商談価格, 当店通常価格</code>
+      <div class="box">
+        <button id="submitBtn" type="button">生成する</button>
+        <div class="note">
+          推奨ヘッダー：<br>
+          <code>商品名, 値段, バーコード, JANコード, 商品用コメント, 希望小売価格, 商談価格, 当店通常価格</code>
+        </div>
       </div>
 
       <div id="result" class="result"></div>
+
+      <div class="footer">
+        背景色や見た目はあとから調整可能。
+      </div>
     </div>
+  </div>
 
-    <script>
-      async function handleUpload() {
-        const fileInput = document.getElementById('csvFile');
-        const result = document.getElementById('result');
-        const btn = document.getElementById('submitBtn');
-        result.style.display = 'none';
-        result.classList.remove('error');
+  <script>
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzZVO4xDypYgeYElH40jzEbfXMNagwVuibx36oCnylg6pI8Dogo1cGmfK5Y6gR663SthQ/exec';
 
-        if (!fileInput.files.length) {
-          showError('CSVファイルを選択してください。');
+    const fileInput = document.getElementById('csvFile');
+    const submitBtn = document.getElementById('submitBtn');
+    const resultBox = document.getElementById('result');
+
+    submitBtn.addEventListener('click', handleUpload);
+
+    async function handleUpload() {
+      resetResult();
+
+      if (!fileInput.files || !fileInput.files.length) {
+        showError('CSVファイルを選択してください。');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      submitBtn.disabled = true;
+      submitBtn.textContent = '生成中...';
+
+      try {
+        const base64 = await fileToBase64(file);
+
+        const response = await fetch(GAS_WEB_APP_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+          },
+          body: JSON.stringify({
+            base64: base64,
+            fileName: file.name,
+            mimeType: file.type || 'text/csv'
+          })
+        });
+
+        const data = await response.json();
+
+        if (!data.ok) {
+          showError(data.message || '生成に失敗しました。');
           return;
         }
 
-        const file = fileInput.files[0];
-        btn.disabled = true;
-        btn.textContent = '生成中...';
+        resultBox.style.display = 'block';
+        resultBox.innerHTML =
+          `生成完了
 
-        try {
-          const base64 = await fileToBase64(file);
-          google.script.run
-            .withSuccessHandler((res) => {
-              btn.disabled = false;
-              btn.textContent = '生成する';
+商品数: ${data.count}件
 
-              if (!res.ok) {
-                showError(res.message || 'エラーが発生しました。');
-                return;
-              }
+Google Sheets:
+<a href="${data.sheetUrl}" target="_blank" rel="noopener noreferrer">${data.sheetUrl}</a>
 
-              result.style.display = 'block';
-              result.innerHTML = `生成完了\n\n商品数: ${res.count}件\n\nGoogle Sheets:\n<a href="${res.sheetUrl}" target="_blank">${res.sheetUrl}</a>\n\nExcel(.xlsx)ダウンロード:\n<a href="${res.xlsxUrl}" target="_blank">${res.xlsxUrl}</a>`;
-            })
-            .withFailureHandler((err) => {
-              btn.disabled = false;
-              btn.textContent = '生成する';
-              showError(err.message || '通信エラーが発生しました。');
-            })
-            .uploadCsvAndBuildWorkbook(base64, file.name, file.type);
-        } catch (e) {
-          btn.disabled = false;
-          btn.textContent = '生成する';
-          showError(e.message || 'ファイルの読み込みに失敗しました。');
-        }
-
-        function showError(message) {
-          result.style.display = 'block';
-          result.classList.add('error');
-          result.textContent = message;
-        }
+Excel(.xlsx)ダウンロード:
+<a href="${data.xlsxUrl}" target="_blank" rel="noopener noreferrer">${data.xlsxUrl}</a>`;
+      } catch (error) {
+        showError(error.message || '通信エラーが発生しました。');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '生成する';
       }
+    }
 
-      function fileToBase64(file) {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const dataUrl = reader.result;
-            resolve(dataUrl.split(',')[1]);
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      }
-    </script>
-  </body>
+    function resetResult() {
+      resultBox.style.display = 'none';
+      resultBox.className = 'result';
+      resultBox.textContent = '';
+      resultBox.innerHTML = '';
+    }
+
+    function showError(message) {
+      resultBox.style.display = 'block';
+      resultBox.className = 'result error';
+      resultBox.textContent = message;
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          const dataUrl = String(reader.result || '');
+          const parts = dataUrl.split(',');
+          resolve(parts[1] || '');
+        };
+
+        reader.onerror = () => reject(new Error('ファイルの読み込みに失敗しました。'));
+        reader.readAsDataURL(file);
+      });
+    }
+  </script>
+</body>
 </html>
