@@ -162,21 +162,21 @@
       <div class="box">
         <button id="submitBtn" type="button">生成する</button>
         <div class="note">
-          推奨ヘッダー：<br>
-          <code>商品名, 値段, バーコード, JANコード, 商品用コメント, 希望小売価格, 商談価格, 当店通常価格</code>
+          今回のCSV形式に対応済み。<br>
+          例：<code>商品名 / 商品単価 / 商品コード</code>
         </div>
       </div>
 
       <div id="result" class="result"></div>
 
       <div class="footer">
-        背景色や見た目はあとから調整可能。
+        生成後、Google Sheets と Excel ダウンロードURLを表示します。
       </div>
     </div>
   </div>
 
   <script>
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzZVO4xDypYgeYElH40jzEbfXMNagwVuibx36oCnylg6pI8Dogo1cGmfK5Y6gR663SthQ/exec';
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxXRuSkyZ3BXJhSEuHOHSoZurBf5Ly5uCsGt2X-LotMsx-bF9vJIXRI7W0D1neygwxWOA/exec';
 
     const fileInput = document.getElementById('csvFile');
     const submitBtn = document.getElementById('submitBtn');
