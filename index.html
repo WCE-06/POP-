@@ -12,7 +12,6 @@
       background: #f7f3e8;
       color: #4a4032;
     }
-
     .wrap {
       max-width: 640px;
       margin: 0 auto;
@@ -22,18 +21,15 @@
       padding: 32px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.08);
     }
-
     h1 {
       margin: 0 0 12px;
       font-size: 28px;
       color: #6b5840;
     }
-
     p {
       margin: 0 0 24px;
       line-height: 1.7;
     }
-
     input[type="file"] {
       width: 100%;
       padding: 12px;
@@ -43,7 +39,6 @@
       box-sizing: border-box;
       background: #fff;
     }
-
     button {
       width: 100%;
       padding: 14px;
@@ -54,12 +49,10 @@
       font-size: 16px;
       cursor: pointer;
     }
-
     button:disabled {
       background: #c7b2a6;
       cursor: not-allowed;
     }
-
     .status {
       margin-top: 20px;
       padding: 14px;
@@ -70,12 +63,10 @@
       line-height: 1.6;
       min-height: 24px;
     }
-
     .download {
       margin-top: 20px;
       display: none;
     }
-
     .download a {
       display: inline-block;
       background: #295E82;
@@ -114,13 +105,17 @@
       status.textContent = msg;
     }
 
-    function readFile(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error("ファイルの読み込みに失敗しました。"));
-        reader.readAsText(file, "UTF-8");
-      });
+    async function readCsvSmart(file) {
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+
+      const utf8 = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+      const sjis = new TextDecoder("shift_jis", { fatal: false }).decode(bytes);
+
+      const utf8Bad = (utf8.match(/�/g) || []).length;
+      const sjisBad = (sjis.match(/�/g) || []).length;
+
+      return sjisBad < utf8Bad ? sjis : utf8;
     }
 
     btn.addEventListener("click", async () => {
@@ -137,7 +132,7 @@
         btn.disabled = true;
         setStatus("CSVを読み込み中...");
 
-        const csv = await readFile(file);
+        const csv = await readCsvSmart(file);
 
         setStatus("生成中...");
 
@@ -172,7 +167,6 @@
         dlLink.href = json.downloadUrl;
         dlLink.download = json.fileName || "pop_output.xlsx";
         dlArea.style.display = "block";
-
         setStatus("完成しました");
       } catch (e) {
         setStatus("エラー:\n" + e.message);
