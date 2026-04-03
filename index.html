@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>POP生成ツール</title>
+
   <style>
     body {
       margin: 0;
@@ -34,51 +35,37 @@
       line-height: 1.7;
     }
 
-    .filebox {
+    input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #d5c8aa;
       margin-bottom: 20px;
     }
 
-    input[type="file"] {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      background: #fff;
-      border: 1px solid #d5c8aa;
-      border-radius: 10px;
-      box-sizing: border-box;
-    }
-
     button {
-      appearance: none;
+      width: 100%;
+      padding: 14px;
       border: none;
       border-radius: 10px;
-      padding: 14px 20px;
+      background: #B65341;
+      color: #fff;
       font-size: 16px;
       cursor: pointer;
-      background: #b65341;
-      color: white;
-      width: 100%;
-      transition: 0.2s ease;
-    }
-
-    button:hover {
-      opacity: 0.92;
     }
 
     button:disabled {
-      background: #bca89d;
+      background: #c7b2a6;
       cursor: not-allowed;
     }
 
     .status {
       margin-top: 20px;
-      padding: 14px 16px;
+      padding: 14px;
       border-radius: 10px;
       background: #f3ede0;
-      font-size: 14px;
       white-space: pre-wrap;
-      line-height: 1.6;
-      min-height: 24px;
+      font-size: 14px;
     }
 
     .download {
@@ -88,117 +75,98 @@
 
     .download a {
       display: inline-block;
-      text-decoration: none;
-      background: #295e82;
+      background: #295E82;
       color: #fff;
       padding: 12px 18px;
       border-radius: 10px;
+      text-decoration: none;
     }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <h1>値札（POP）自動生成</h1>
-    <p>CSVをアップロードすると、POP付きのExcelファイルを作成します。</p>
+    <p>CSVをアップロードすると、POP付きExcelを生成します。</p>
 
-    <div class="filebox">
-      <input type="file" id="csvFile" accept=".csv,text/csv" />
-    </div>
+    <input type="file" id="csvFile" accept=".csv">
 
-    <button id="uploadBtn">CSVをアップロードして生成</button>
+    <button id="btn">生成する</button>
 
-    <div class="status" id="status">CSVファイルを選択してください。</div>
+    <div class="status" id="status">CSVを選択してください</div>
 
-    <div class="download" id="downloadArea">
-      <a id="downloadLink" href="#" target="_blank" rel="noopener noreferrer">Excelをダウンロード</a>
+    <div class="download" id="dlArea">
+      <a id="dlLink" target="_blank">ダウンロード</a>
     </div>
   </div>
 
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbw8PImKcXJj6N5NK8YheP6Ka69b9yd8yJZHN9ZTQnKEGXlOZCcJL3SuOeJmE95Qs9U_og/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwZyRG4lYtxSJOynRXvAWiWAJ9Z1pNhRXqSnvMADpS90eF3QlmN8JojJXjDr3r5JKsBbQ/exec";
 
-    const fileInput = document.getElementById("csvFile");
-    const uploadBtn = document.getElementById("uploadBtn");
-    const statusEl = document.getElementById("status");
-    const downloadArea = document.getElementById("downloadArea");
-    const downloadLink = document.getElementById("downloadLink");
+    const btn = document.getElementById("btn");
+    const status = document.getElementById("status");
+    const dlArea = document.getElementById("dlArea");
+    const dlLink = document.getElementById("dlLink");
 
-    function setStatus(message) {
-      statusEl.textContent = message;
+    function setStatus(msg){
+      status.textContent = msg;
     }
 
-    function readFileAsText(file) {
-      return new Promise((resolve, reject) => {
+    function readFile(file){
+      return new Promise((resolve, reject)=>{
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error("ファイルの読み込みに失敗しました。"));
+        reader.onload = ()=>resolve(reader.result);
+        reader.onerror = ()=>reject();
         reader.readAsText(file, "UTF-8");
       });
     }
 
-    uploadBtn.addEventListener("click", async () => {
+    btn.onclick = async () => {
       try {
-        downloadArea.style.display = "none";
-        downloadLink.href = "#";
+        dlArea.style.display = "none";
 
-        const file = fileInput.files[0];
-        if (!file) {
-          setStatus("先にCSVファイルを選択してください。");
+        const file = document.getElementById("csvFile").files[0];
+        if(!file){
+          setStatus("CSVを選択してください");
           return;
         }
 
-        uploadBtn.disabled = true;
-        setStatus("CSVを読み込んでいます…");
+        btn.disabled = true;
 
-        const csvText = await readFileAsText(file);
+        setStatus("CSV読み込み中...");
+        const csv = await readFile(file);
 
-        setStatus("POPデータを生成しています…");
+        setStatus("生成中...");
 
-        const response = await fetch(GAS_URL, {
+        const res = await fetch(GAS_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-          },
+          headers: { "Content-Type": "text/plain" },
           body: JSON.stringify({
             fileName: file.name,
-            csv: csvText
+            csv: csv
           })
         });
 
-        const text = await response.text();
+        const text = await res.text();
+        const json = JSON.parse(text);
 
-        let result;
-        try {
-          result = JSON.parse(text);
-        } catch (e) {
-          throw new Error("GASからJSON形式で応答が返っていません。\n返答: " + text);
+        if(!json.success){
+          throw new Error(json.error);
         }
 
-        if (!result.success) {
-          throw new Error(result.error || "POP生成に失敗しました。");
-        }
+        dlLink.href = json.downloadUrl;
+        dlLink.download = json.fileName;
 
-        const url =
-          result.downloadUrl ||
-          (result.fileId
-            ? `https://drive.google.com/uc?export=download&id=${result.fileId}`
-            : "");
+        dlArea.style.display = "block";
 
-        if (!url) {
-          throw new Error("ダウンロードURLが取得できませんでした。");
-        }
+        setStatus("完成しました");
 
-        downloadLink.href = url;
-        downloadLink.download = result.fileName || "pop_output.xlsx";
-        downloadArea.style.display = "block";
-
-        setStatus("生成が完了しました。下のボタンからExcelをダウンロードできます。");
-      } catch (err) {
-        setStatus("エラーが発生しました。\n" + err.message);
+      } catch(e){
+        setStatus("エラー:\n" + e.message);
       } finally {
-        uploadBtn.disabled = false;
+        btn.disabled = false;
       }
-    });
+    }
   </script>
 </body>
 </html>
