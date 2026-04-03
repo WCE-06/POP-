@@ -3,187 +3,251 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>POP生成ツール</title>
+  <title>CSV → 値札Excel生成</title>
   <style>
+    :root {
+      --cream: #fff6de;
+      --cream-dark: #f7e7bc;
+      --line: #d9c79a;
+      --text: #3d3527;
+      --accent: #d94f30;
+      --card: #fffdf7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      padding: 40px 20px;
-      font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
-      background: #f7f3e8;
-      color: #4a4032;
+      padding: 24px;
+      background: linear-gradient(180deg, #fff8ea 0%, #fffdf7 100%);
+      color: var(--text);
+      font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
     }
 
     .wrap {
-      max-width: 640px;
+      max-width: 760px;
       margin: 0 auto;
-      background: #fffaf0;
-      border: 1px solid #d8ccb0;
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+
+    .card {
+      background: var(--card);
+      border: 2px solid var(--line);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(80, 60, 20, 0.08);
     }
 
     h1 {
-      margin: 0 0 12px;
+      margin: 0 0 10px;
       font-size: 28px;
-      color: #6b5840;
+      line-height: 1.3;
+      color: var(--accent);
+      font-weight: 800;
     }
 
-    p {
-      margin: 0 0 24px;
-      line-height: 1.7;
+    .lead {
+      margin: 0 0 18px;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #5d5443;
+    }
+
+    .box {
+      background: var(--cream);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    .label {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
     }
 
     input[type="file"] {
       width: 100%;
       padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #d5c8aa;
-      margin-bottom: 20px;
-      box-sizing: border-box;
       background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--text);
     }
 
     button {
-      width: 100%;
-      padding: 14px;
+      appearance: none;
       border: none;
-      border-radius: 10px;
-      background: #B65341;
+      background: var(--accent);
       color: #fff;
-      font-size: 16px;
+      border-radius: 999px;
+      padding: 14px 22px;
+      font-size: 15px;
+      font-weight: 700;
       cursor: pointer;
+      box-shadow: 0 6px 16px rgba(217, 79, 48, 0.22);
     }
 
     button:disabled {
-      background: #c7b2a6;
+      opacity: 0.65;
       cursor: not-allowed;
     }
 
-    .status {
-      margin-top: 20px;
-      padding: 14px;
-      border-radius: 10px;
-      background: #f3ede0;
-      white-space: pre-wrap;
-      font-size: 14px;
-      line-height: 1.6;
-      min-height: 24px;
+    .note {
+      margin-top: 14px;
+      font-size: 12px;
+      line-height: 1.8;
+      color: #6a614f;
     }
 
-    .download {
-      margin-top: 20px;
+    .note code {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 2px 6px;
+      word-break: break-all;
+    }
+
+    .result {
       display: none;
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #fffdf3;
+      white-space: pre-wrap;
+      line-height: 1.8;
     }
 
-    .download a {
-      display: inline-block;
-      background: #295E82;
-      color: #fff;
-      padding: 12px 18px;
-      border-radius: 10px;
-      text-decoration: none;
+    .result.error {
+      background: #fff1ef;
+      border-color: #efb7ac;
+      color: #8a2d1f;
+    }
+
+    a {
+      color: #1d5fbf;
+      word-break: break-all;
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>値札（POP）自動生成</h1>
-    <p>CSVをアップロードすると、POP付きExcelを生成します。</p>
+    <div class="card">
+      <h1>CSV → 値札Excel生成</h1>
+      <p class="lead">
+        CSVをアップロードすると、入力シート・POP大・POP中・POP小 を含むExcel用データを生成します。
+      </p>
 
-    <input type="file" id="csvFile" accept=".csv,text/csv">
-    <button id="btn">生成する</button>
+      <div class="box">
+        <label class="label" for="csvFile">CSVファイルを選択</label>
+        <input type="file" id="csvFile" accept=".csv,text/csv,.tsv,text/tab-separated-values,.txt,text/plain">
+      </div>
 
-    <div class="status" id="status">CSVを選択してください</div>
+      <div class="box">
+        <button id="submitBtn" type="button">生成する</button>
+        <div class="note">
+          固定列モード対応。<br>
+          3列目=商品コード / 4列目=キャッチコピー / 5列目=商品名 / 6列目=商品単価
+        </div>
+      </div>
 
-    <div class="download" id="dlArea">
-      <a id="dlLink" target="_blank" rel="noopener noreferrer">ダウンロード</a>
+      <div id="result" class="result"></div>
     </div>
   </div>
 
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbw2YpA6F3wNqCbG5dnfi54ExCLLgbmzHlwCUHNQCSo-syR6DRoxpFrIxxc15zbZrYYeKA/exec";
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz6URXbh1wLWVXceyLfTt_7BtpSRBLXQPD2weU7dBwCbveAG69E-z3PzS0s3zW9HYhg/exec';
 
-    const btn = document.getElementById("btn");
-    const status = document.getElementById("status");
-    const dlArea = document.getElementById("dlArea");
-    const dlLink = document.getElementById("dlLink");
-    const csvFile = document.getElementById("csvFile");
+    const fileInput = document.getElementById('csvFile');
+    const submitBtn = document.getElementById('submitBtn');
+    const resultBox = document.getElementById('result');
 
-    function setStatus(msg) {
-      status.textContent = msg;
-    }
+    submitBtn.addEventListener('click', handleUpload);
 
-    async function readCsvSmart(file) {
-      const buffer = await file.arrayBuffer();
-      const bytes = new Uint8Array(buffer);
+    async function handleUpload() {
+      resetResult();
 
-      const utf8 = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-      const sjis = new TextDecoder("shift_jis", { fatal: false }).decode(bytes);
+      if (!fileInput.files || !fileInput.files.length) {
+        showError('CSVまたはTSVファイルを選択してください。');
+        return;
+      }
 
-      const utf8Bad = (utf8.match(/�/g) || []).length;
-      const sjisBad = (sjis.match(/�/g) || []).length;
+      const file = fileInput.files[0];
+      submitBtn.disabled = true;
+      submitBtn.textContent = '生成中...';
 
-      return sjisBad < utf8Bad ? sjis : utf8;
-    }
-
-    btn.addEventListener("click", async () => {
       try {
-        dlArea.style.display = "none";
-        dlLink.href = "";
+        const base64 = await fileToBase64(file);
 
-        const file = csvFile.files[0];
-        if (!file) {
-          setStatus("CSVを選択してください");
-          return;
-        }
-
-        btn.disabled = true;
-        setStatus("CSVを読み込み中...");
-
-        const csv = await readCsvSmart(file);
-
-        setStatus("生成中...");
-
-        const res = await fetch(GAS_URL, {
-          method: "POST",
+        const response = await fetch(GAS_WEB_APP_URL, {
+          method: 'POST',
           headers: {
-            "Content-Type": "text/plain;charset=utf-8"
+            'Content-Type': 'text/plain;charset=utf-8'
           },
           body: JSON.stringify({
+            base64: base64,
             fileName: file.name,
-            csv: csv
+            mimeType: file.type || 'text/plain'
           })
         });
 
-        const text = await res.text();
+        const data = await response.json();
 
-        let json;
-        try {
-          json = JSON.parse(text);
-        } catch (e) {
-          throw new Error("GASの返答がJSONではありません。\n" + text);
+        if (!data.ok) {
+          showError(data.message || '生成に失敗しました。');
+          return;
         }
 
-        if (!json.success) {
-          throw new Error(json.error || "生成に失敗しました。");
-        }
+        resultBox.style.display = 'block';
+        resultBox.innerHTML =
+          `生成完了
 
-        if (!json.downloadUrl) {
-          throw new Error("downloadUrl が返ってきていません。");
-        }
+商品数: ${data.count}件
 
-        dlLink.href = json.downloadUrl;
-        dlLink.download = json.fileName || "pop_output.xlsx";
-        dlArea.style.display = "block";
+Google Sheets:
+<a href="${data.sheetUrl}" target="_blank" rel="noopener noreferrer">${data.sheetUrl}</a>
 
-        setStatus("完成しました");
-      } catch (e) {
-        setStatus("エラー:\n" + e.message);
+Excel(.xlsx)ダウンロード:
+<a href="${data.xlsxUrl}" target="_blank" rel="noopener noreferrer">${data.xlsxUrl}</a>`;
+      } catch (error) {
+        showError(error.message || '通信エラーが発生しました。');
       } finally {
-        btn.disabled = false;
+        submitBtn.disabled = false;
+        submitBtn.textContent = '生成する';
       }
-    });
+    }
+
+    function resetResult() {
+      resultBox.style.display = 'none';
+      resultBox.className = 'result';
+      resultBox.textContent = '';
+      resultBox.innerHTML = '';
+    }
+
+    function showError(message) {
+      resultBox.style.display = 'block';
+      resultBox.className = 'result error';
+      resultBox.textContent = message;
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          const dataUrl = String(reader.result || '');
+          const parts = dataUrl.split(',');
+          resolve(parts[1] || '');
+        };
+
+        reader.onerror = () => reject(new Error('ファイルの読み込みに失敗しました。'));
+        reader.readAsDataURL(file);
+      });
+    }
   </script>
 </body>
 </html>
