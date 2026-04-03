@@ -14,9 +14,7 @@
       --card: #fffdf7;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -111,6 +109,40 @@
       word-break: break-all;
     }
 
+    .progressWrap {
+      display: none;
+      margin-top: 18px;
+    }
+
+    .progressLabel {
+      font-size: 13px;
+      margin-bottom: 6px;
+      color: #6a614f;
+    }
+
+    .progressOuter {
+      width: 100%;
+      height: 14px;
+      border-radius: 999px;
+      background: #f1e7c9;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+
+    .progressInner {
+      width: 0%;
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.2s ease;
+    }
+
+    .progressPercent {
+      margin-top: 6px;
+      font-size: 13px;
+      color: #6a614f;
+      text-align: right;
+    }
+
     .result {
       display: none;
       margin-top: 18px;
@@ -152,8 +184,16 @@
         <div class="note">
           1行目は見出しとして無視し、2行目以降を読み込みます。<br>
           <code>3列目=商品コード / 4列目=キャッチコピー / 5列目=商品名 / 6列目=商品単価</code><br>
-          メイン価格は税抜、下段に税込価格を表示します。
+          メイン価格は税抜、下段に税込価格、バーコードは画像表示です。
         </div>
+      </div>
+
+      <div id="progressWrap" class="progressWrap">
+        <div class="progressLabel">生成中...</div>
+        <div class="progressOuter">
+          <div id="progressInner" class="progressInner"></div>
+        </div>
+        <div id="progressPercent" class="progressPercent">0%</div>
       </div>
 
       <div id="result" class="result"></div>
@@ -161,11 +201,17 @@
   </div>
 
   <script>
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwRazWd2LmDbhKDYY1u6Sq3NnWYyiSR6H59neSJND_U4WMaM8xdvBe2hRlikXP5beTW0g/exec';
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxH1y1dn2lOmpDGmjg02t5hh8HvXXKjVxgenbXVJ2FXGLGDOh3OS13F0grvIjW2g1Fv/exec';
 
     const fileInput = document.getElementById('csvFile');
     const submitBtn = document.getElementById('submitBtn');
     const resultBox = document.getElementById('result');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressInner = document.getElementById('progressInner');
+    const progressPercent = document.getElementById('progressPercent');
+
+    let fakeProgressTimer = null;
+    let currentProgress = 0;
 
     submitBtn.addEventListener('click', handleUpload);
 
@@ -182,7 +228,10 @@
       submitBtn.textContent = '生成中...';
 
       try {
-        const base64 = await fileToBase64(file);
+        startProgress();
+
+        const base64 = await fileToBase64WithProgress(file);
+        setProgress(45);
 
         const response = await fetch(GAS_WEB_APP_URL, {
           method: 'POST',
@@ -196,12 +245,18 @@
           })
         });
 
+        setProgress(85);
+
         const data = await response.json();
 
         if (!data.ok) {
+          stopProgress();
           showError(data.message || '生成に失敗しました。');
           return;
         }
+
+        setProgress(100);
+        stopProgress(true);
 
         resultBox.style.display = 'block';
         resultBox.innerHTML =
@@ -215,6 +270,7 @@ Google Sheets:
 Excel(.xlsx)ダウンロード:
 <a href="${data.xlsxUrl}" target="_blank" rel="noopener noreferrer">${data.xlsxUrl}</a>`;
       } catch (error) {
+        stopProgress();
         showError(error.message || '通信エラーが発生しました。');
       } finally {
         submitBtn.disabled = false;
@@ -222,11 +278,52 @@ Excel(.xlsx)ダウンロード:
       }
     }
 
+    function startProgress() {
+      progressWrap.style.display = 'block';
+      currentProgress = 0;
+      setProgress(3);
+
+      if (fakeProgressTimer) clearInterval(fakeProgressTimer);
+
+      fakeProgressTimer = setInterval(() => {
+        if (currentProgress < 90) {
+          setProgress(currentProgress + 1);
+        }
+      }, 250);
+    }
+
+    function stopProgress(keepAt100 = false) {
+      if (fakeProgressTimer) {
+        clearInterval(fakeProgressTimer);
+        fakeProgressTimer = null;
+      }
+
+      if (!keepAt100) {
+        progressWrap.style.display = 'none';
+      } else {
+        setTimeout(() => {
+          progressWrap.style.display = 'none';
+        }, 600);
+      }
+    }
+
+    function setProgress(value) {
+      currentProgress = Math.max(0, Math.min(100, value));
+      progressInner.style.width = `${currentProgress}%`;
+      progressPercent.textContent = `${currentProgress}%`;
+    }
+
     function resetResult() {
       resultBox.style.display = 'none';
       resultBox.className = 'result';
       resultBox.textContent = '';
       resultBox.innerHTML = '';
+      progressWrap.style.display = 'none';
+      setProgress(0);
+      if (fakeProgressTimer) {
+        clearInterval(fakeProgressTimer);
+        fakeProgressTimer = null;
+      }
     }
 
     function showError(message) {
@@ -235,9 +332,16 @@ Excel(.xlsx)ダウンロード:
       resultBox.textContent = message;
     }
 
-    function fileToBase64(file) {
+    function fileToBase64WithProgress(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
+
+        reader.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 40);
+            setProgress(Math.max(currentProgress, percent));
+          }
+        };
 
         reader.onload = () => {
           const dataUrl = String(reader.result || '');
