@@ -1,358 +1,204 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CSV → 値札Excel生成</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>POP生成ツール</title>
   <style>
-    :root {
-      --cream: #fff6de;
-      --cream-dark: #f7e7bc;
-      --line: #d9c79a;
-      --text: #3d3527;
-      --accent: #d94f30;
-      --card: #fffdf7;
-    }
-
-    * { box-sizing: border-box; }
-
     body {
       margin: 0;
-      padding: 24px;
-      background: linear-gradient(180deg, #fff8ea 0%, #fffdf7 100%);
-      color: var(--text);
-      font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+      padding: 40px 20px;
+      font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+      background: #f7f3e8;
+      color: #4a4032;
     }
 
     .wrap {
-      max-width: 760px;
+      max-width: 640px;
       margin: 0 auto;
-    }
-
-    .card {
-      background: var(--card);
-      border: 2px solid var(--line);
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 8px 24px rgba(80, 60, 20, 0.08);
+      background: #fffaf0;
+      border: 1px solid #d8ccb0;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
     }
 
     h1 {
-      margin: 0 0 10px;
+      margin: 0 0 12px;
       font-size: 28px;
-      line-height: 1.3;
-      color: var(--accent);
-      font-weight: 800;
+      color: #6b5840;
     }
 
-    .lead {
-      margin: 0 0 18px;
-      font-size: 14px;
-      line-height: 1.8;
-      color: #5d5443;
+    p {
+      margin: 0 0 24px;
+      line-height: 1.7;
     }
 
-    .box {
-      background: var(--cream);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 16px;
-      margin-top: 16px;
-    }
-
-    .label {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 8px;
+    .filebox {
+      margin-bottom: 20px;
     }
 
     input[type="file"] {
+      display: block;
       width: 100%;
       padding: 12px;
       background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      color: var(--text);
+      border: 1px solid #d5c8aa;
+      border-radius: 10px;
+      box-sizing: border-box;
     }
 
     button {
       appearance: none;
       border: none;
-      background: var(--accent);
-      color: #fff;
-      border-radius: 999px;
-      padding: 14px 22px;
-      font-size: 15px;
-      font-weight: 700;
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-size: 16px;
       cursor: pointer;
-      box-shadow: 0 6px 16px rgba(217, 79, 48, 0.22);
+      background: #b65341;
+      color: white;
+      width: 100%;
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      opacity: 0.92;
     }
 
     button:disabled {
-      opacity: 0.65;
+      background: #bca89d;
       cursor: not-allowed;
     }
 
-    .note {
-      margin-top: 14px;
-      font-size: 12px;
-      line-height: 1.8;
-      color: #6a614f;
-    }
-
-    .note code {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 2px 6px;
-      word-break: break-all;
-    }
-
-    .progressWrap {
-      display: none;
-      margin-top: 18px;
-    }
-
-    .progressLabel {
-      font-size: 13px;
-      margin-bottom: 6px;
-      color: #6a614f;
-    }
-
-    .progressOuter {
-      width: 100%;
-      height: 14px;
-      border-radius: 999px;
-      background: #f1e7c9;
-      overflow: hidden;
-      border: 1px solid var(--line);
-    }
-
-    .progressInner {
-      width: 0%;
-      height: 100%;
-      background: var(--accent);
-      transition: width 0.2s ease;
-    }
-
-    .progressPercent {
-      margin-top: 6px;
-      font-size: 13px;
-      color: #6a614f;
-      text-align: right;
-    }
-
-    .result {
-      display: none;
-      margin-top: 18px;
-      padding: 16px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: #fffdf3;
+    .status {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: #f3ede0;
+      font-size: 14px;
       white-space: pre-wrap;
-      line-height: 1.8;
+      line-height: 1.6;
+      min-height: 24px;
     }
 
-    .result.error {
-      background: #fff1ef;
-      border-color: #efb7ac;
-      color: #8a2d1f;
+    .download {
+      margin-top: 20px;
+      display: none;
     }
 
-    a {
-      color: #1d5fbf;
-      word-break: break-all;
+    .download a {
+      display: inline-block;
+      text-decoration: none;
+      background: #295e82;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
-      <h1>CSV → 値札Excel生成</h1>
-      <p class="lead">
-        CSVをアップロードすると、入力シート・POP大・POP中・POP小 を含むExcel用データを生成します。
-      </p>
+    <h1>値札（POP）自動生成</h1>
+    <p>CSVをアップロードすると、POP付きのExcelファイルを作成します。</p>
 
-      <div class="box">
-        <label class="label" for="csvFile">CSVファイルを選択</label>
-        <input type="file" id="csvFile" accept=".csv,text/csv,.txt,text/plain">
-      </div>
+    <div class="filebox">
+      <input type="file" id="csvFile" accept=".csv,text/csv" />
+    </div>
 
-      <div class="box">
-        <button id="submitBtn" type="button">生成する</button>
-        <div class="note">
-          1行目は見出しとして無視し、2行目以降を読み込みます。<br>
-          <code>3列目=商品コード / 4列目=キャッチコピー / 5列目=商品名 / 6列目=商品単価</code><br>
-          左に「おもひで商店」、右にバーコード、メイン価格は税抜、下段に税込価格を表示します。
-        </div>
-      </div>
+    <button id="uploadBtn">CSVをアップロードして生成</button>
 
-      <div id="progressWrap" class="progressWrap">
-        <div class="progressLabel">生成中...</div>
-        <div class="progressOuter">
-          <div id="progressInner" class="progressInner"></div>
-        </div>
-        <div id="progressPercent" class="progressPercent">0%</div>
-      </div>
+    <div class="status" id="status">CSVファイルを選択してください。</div>
 
-      <div id="result" class="result"></div>
+    <div class="download" id="downloadArea">
+      <a id="downloadLink" href="#" target="_blank" rel="noopener noreferrer">Excelをダウンロード</a>
     </div>
   </div>
 
   <script>
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyJRVJqIRqsQhbmwY2Sd3mgandAGoL48zjh50Uixoyrl2FPMK60Zgh1hf62XTrB_el5Ow/exec';
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbw8PImKcXJj6N5NK8YheP6Ka69b9yd8yJZHN9ZTQnKEGXlOZCcJL3SuOeJmE95Qs9U_og/exec";
 
-    const fileInput = document.getElementById('csvFile');
-    const submitBtn = document.getElementById('submitBtn');
-    const resultBox = document.getElementById('result');
-    const progressWrap = document.getElementById('progressWrap');
-    const progressInner = document.getElementById('progressInner');
-    const progressPercent = document.getElementById('progressPercent');
+    const fileInput = document.getElementById("csvFile");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const statusEl = document.getElementById("status");
+    const downloadArea = document.getElementById("downloadArea");
+    const downloadLink = document.getElementById("downloadLink");
 
-    let fakeProgressTimer = null;
-    let currentProgress = 0;
+    function setStatus(message) {
+      statusEl.textContent = message;
+    }
 
-    submitBtn.addEventListener('click', handleUpload);
+    function readFileAsText(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("ファイルの読み込みに失敗しました。"));
+        reader.readAsText(file, "UTF-8");
+      });
+    }
 
-    async function handleUpload() {
-      resetResult();
-
-      if (!fileInput.files || !fileInput.files.length) {
-        showError('CSVファイルを選択してください。');
-        return;
-      }
-
-      const file = fileInput.files[0];
-      submitBtn.disabled = true;
-      submitBtn.textContent = '生成中...';
-
+    uploadBtn.addEventListener("click", async () => {
       try {
-        startProgress();
+        downloadArea.style.display = "none";
+        downloadLink.href = "#";
 
-        const base64 = await fileToBase64WithProgress(file);
-        setProgress(45);
-
-        const response = await fetch(GAS_WEB_APP_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'text/plain;charset=utf-8'
-          },
-          body: JSON.stringify({
-            base64: base64,
-            fileName: file.name,
-            mimeType: file.type || 'text/csv'
-          })
-        });
-
-        setProgress(85);
-
-        const data = await response.json();
-
-        if (!data.ok) {
-          stopProgress();
-          showError(data.message || '生成に失敗しました。');
+        const file = fileInput.files[0];
+        if (!file) {
+          setStatus("先にCSVファイルを選択してください。");
           return;
         }
 
-        setProgress(100);
-        stopProgress(true);
+        uploadBtn.disabled = true;
+        setStatus("CSVを読み込んでいます…");
 
-        resultBox.style.display = 'block';
-        resultBox.innerHTML =
-          `生成完了
+        const csvText = await readFileAsText(file);
 
-商品数: ${data.count}件
+        setStatus("POPデータを生成しています…");
 
-Google Sheets:
-<a href="${data.sheetUrl}" target="_blank" rel="noopener noreferrer">${data.sheetUrl}</a>
+        const response = await fetch(GAS_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify({
+            fileName: file.name,
+            csv: csvText
+          })
+        });
 
-Excel(.xlsx)ダウンロード:
-<a href="${data.xlsxUrl}" target="_blank" rel="noopener noreferrer">${data.xlsxUrl}</a>`;
-      } catch (error) {
-        stopProgress();
-        showError(error.message || '通信エラーが発生しました。');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = '生成する';
-      }
-    }
+        const text = await response.text();
 
-    function startProgress() {
-      progressWrap.style.display = 'block';
-      currentProgress = 0;
-      setProgress(3);
-
-      if (fakeProgressTimer) clearInterval(fakeProgressTimer);
-
-      fakeProgressTimer = setInterval(() => {
-        if (currentProgress < 90) {
-          setProgress(currentProgress + 1);
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (e) {
+          throw new Error("GASからJSON形式で応答が返っていません。\n返答: " + text);
         }
-      }, 250);
-    }
 
-    function stopProgress(keepAt100 = false) {
-      if (fakeProgressTimer) {
-        clearInterval(fakeProgressTimer);
-        fakeProgressTimer = null;
+        if (!result.success) {
+          throw new Error(result.error || "POP生成に失敗しました。");
+        }
+
+        const url =
+          result.downloadUrl ||
+          (result.fileId
+            ? `https://drive.google.com/uc?export=download&id=${result.fileId}`
+            : "");
+
+        if (!url) {
+          throw new Error("ダウンロードURLが取得できませんでした。");
+        }
+
+        downloadLink.href = url;
+        downloadLink.download = result.fileName || "pop_output.xlsx";
+        downloadArea.style.display = "block";
+
+        setStatus("生成が完了しました。下のボタンからExcelをダウンロードできます。");
+      } catch (err) {
+        setStatus("エラーが発生しました。\n" + err.message);
+      } finally {
+        uploadBtn.disabled = false;
       }
-
-      if (!keepAt100) {
-        progressWrap.style.display = 'none';
-      } else {
-        setTimeout(() => {
-          progressWrap.style.display = 'none';
-        }, 600);
-      }
-    }
-
-    function setProgress(value) {
-      currentProgress = Math.max(0, Math.min(100, value));
-      progressInner.style.width = `${currentProgress}%`;
-      progressPercent.textContent = `${currentProgress}%`;
-    }
-
-    function resetResult() {
-      resultBox.style.display = 'none';
-      resultBox.className = 'result';
-      resultBox.textContent = '';
-      resultBox.innerHTML = '';
-      progressWrap.style.display = 'none';
-      setProgress(0);
-      if (fakeProgressTimer) {
-        clearInterval(fakeProgressTimer);
-        fakeProgressTimer = null;
-      }
-    }
-
-    function showError(message) {
-      resultBox.style.display = 'block';
-      resultBox.className = 'result error';
-      resultBox.textContent = message;
-    }
-
-    function fileToBase64WithProgress(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-
-        reader.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const percent = Math.round((event.loaded / event.total) * 40);
-            setProgress(Math.max(currentProgress, percent));
-          }
-        };
-
-        reader.onload = () => {
-          const dataUrl = String(reader.result || '');
-          const parts = dataUrl.split(',');
-          resolve(parts[1] || '');
-        };
-
-        reader.onerror = () => reject(new Error('ファイルの読み込みに失敗しました。'));
-        reader.readAsDataURL(file);
-      });
-    }
+    });
   </script>
 </body>
 </html>
